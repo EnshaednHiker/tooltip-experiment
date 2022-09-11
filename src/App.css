@@ -36,3 +36,21 @@
     transform: rotate(360deg);
   }
 }
+
+td {
+  border: 5px solid;
+  border-color: #dc143c #1e90ff;
+  padding: 0.75rem;
+}
+
+th {
+    border: 5px solid;
+    border-color: #8cdc14 #1e90ff;
+    padding: 0.75rem;
+  
+}
+
+table {
+  max-width: 600px;
+  margin: 20px;
+}

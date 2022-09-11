@@ -1,25 +1,19 @@
 import React from 'react';
-import logo from './logo.svg';
+
 import './App.css';
 
+import {TABLE_DATA} from './tableData'
+import {TableRow}  from './TableRow';
+
 function App() {
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <table className="">
+    <thead><tr><th>number</th><th>category</th><th>headline</th></tr></thead>  
+      <tbody>
+      {TABLE_DATA.map((tableDatum, index) => <TableRow index={index} category={tableDatum.category} headline={tableDatum.mostPopularArticle} key={`${tableDatum.category}-${index}`}/>)}
+      </tbody>
+    </table>
   );
 }
 
