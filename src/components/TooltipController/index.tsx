@@ -2,8 +2,12 @@ import {
   MouseEventHandler,
   PropsWithChildren,
   useCallback,
+  useRef,
   useState,
 } from "react";
+
+import { useMousePosition } from "../../utilities/use-mouse-position";
+
 import "./styles.css";
 
 const DURATION_LEAVE = "2s";
@@ -14,6 +18,8 @@ const CURSOR_HELP = "help";
 const CURSOR_AUTO = "auto";
 
 export const TooltipController = ({ children }: PropsWithChildren<any>) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
   const [tooltipData, setTooltipData] = useState<string | undefined>();
   const [tooltipOpacity, setTooltipOpacity] = useState<
     typeof OPACITY_INVISIBLE | typeof OPACITY_VISIBLE
@@ -24,6 +30,8 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
   const [tooltipCursor, setTooltipCursor] = useState<
     typeof CURSOR_AUTO | typeof CURSOR_HELP
   >(CURSOR_HELP);
+
+  const mousePosition = useMousePosition({ isTouchIncluded: undefined });
 
   const handleOnMouseLeave = useCallback<MouseEventHandler<HTMLDivElement>>(
     (event) => {
@@ -36,8 +44,6 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
 
   const handleOnMouseOver = useCallback<MouseEventHandler<HTMLDivElement>>(
     (event) => {
-      // TODO: make the tooltip follow the mouse cursor, not MVP
-
       const eventTarget = event.target as HTMLElement;
       const tooltipData = eventTarget.dataset?.tooltip;
 
@@ -71,11 +77,22 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
       onMouseEnter={handleOnMouseEnter}
       onMouseLeave={handleOnMouseLeave}
       onMouseOver={handleOnMouseOver}
+      ref={wrapperRef}
       style={{
         // @ts-ignore --tooltip custom css properties not allowed
         "--tooltip-opacity": tooltipOpacity,
         "--tooltip-duration": tooltipDuration,
         "--tooltip-cursor": tooltipCursor,
+        "--tooltip-left-position": `${
+          mousePosition.x -
+          (wrapperRef.current?.getBoundingClientRect()?.left ?? 0) -
+          20
+        }px`,
+        "--tooltip-top-position": `${
+          mousePosition.y -
+          (wrapperRef.current?.getBoundingClientRect()?.top ?? 0) -
+          80
+        }px`,
       }}
     >
       {children}

@@ -5,7 +5,10 @@ export const useMousePosition = ({
 }: {
   isTouchIncluded: boolean | undefined;
 }) => {
-  const [mousePosition, setMousePosition] = useState({ x: null, y: null });
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
 
   useEffect(() => {
     // TODO: investigate better typing than any here
