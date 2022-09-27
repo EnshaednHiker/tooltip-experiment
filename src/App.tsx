@@ -3,8 +3,8 @@ import React from "react";
 import "./App.css";
 
 import { TABLE_DATA } from "./tableData";
-import { TableRow } from "./TableRow";
-import { TooltipController } from "./TooltipController";
+import { TableRow } from "./components/TableRow";
+import { TooltipController } from "./components/TooltipController";
 
 function App() {
   return (
