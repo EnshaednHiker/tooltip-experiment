@@ -1,6 +1,15 @@
-import React from 'react';
-import './index.css';
-import { TableRowProps } from './types';
-export const TableRow = ({ index, category, headline }: TableRowProps) => (<tr className="tableRow"><td>{index + 1}</td><td>{category}</td><td>{headline}</td></tr>);
+import { TableRowProps } from "./types";
 
-TableRow.displayName = 'TableRow';
+export const TableRow = ({ index, category, headline }: TableRowProps) => {
+  const dataTooltip = `category: ${category}, headline: ${headline}`;
+
+  return (
+    <tr>
+      <td data-tooltip={dataTooltip}>{index + 1}</td>
+      <td data-tooltip={dataTooltip}>{category}</td>
+      <td data-tooltip={dataTooltip}>{headline}</td>
+    </tr>
+  );
+};
+
+TableRow.displayName = "TableRow";
