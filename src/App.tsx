@@ -2,7 +2,7 @@ import React from "react";
 
 import "./App.css";
 
-import { TABLE_DATA } from "./tableData";
+import { TABLE_DATA } from "./data/tableData";
 import { TableRow } from "./components/TableRow";
 import { TooltipController } from "./components/TooltipController";
 
