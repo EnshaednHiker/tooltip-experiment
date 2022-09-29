@@ -6,8 +6,6 @@ import {
   useState,
 } from "react";
 
-import { useMousePosition } from "../../utilities/use-mouse-position";
-
 import "./styles.css";
 
 const DURATION_LEAVE = "2s";
@@ -30,8 +28,8 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
   const [tooltipCursor, setTooltipCursor] = useState<
     typeof CURSOR_AUTO | typeof CURSOR_HELP
   >(CURSOR_HELP);
-
-  const mousePosition = useMousePosition({ isTouchIncluded: undefined });
+  const [tooltipTop, setTooltipTop] = useState<number>(0);
+  const [tooltipLeft, setTooltipLeft] = useState<number>(0);
 
   const handleOnMouseLeave = useCallback<MouseEventHandler<HTMLDivElement>>(
     (event) => {
@@ -47,11 +45,28 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
       const eventTarget = event.target as HTMLElement;
       const tooltipData = eventTarget.dataset?.tooltip;
 
+      const outerTableDimensions = wrapperRef.current?.getBoundingClientRect();
+      const currentTableCellDimensions = eventTarget.getBoundingClientRect();
+
       if (tooltipData) {
         setTooltipData(tooltipData);
         setTooltipOpacity(OPACITY_VISIBLE);
         setTooltipDuration(DURATION);
         setTooltipCursor(CURSOR_HELP);
+
+        // make sure we don't set the tooltip on top of the table headings
+        if (wrapperRef.current !== eventTarget) {
+          setTooltipTop(
+            currentTableCellDimensions.top -
+              (outerTableDimensions?.top ?? 0) -
+              8
+          );
+          setTooltipLeft(
+            currentTableCellDimensions.left -
+              (outerTableDimensions?.left ?? 0) +
+              eventTarget.offsetWidth / 2
+          );
+        }
       } else {
         setTooltipOpacity(OPACITY_INVISIBLE);
         setTooltipDuration(DURATION_LEAVE);
@@ -83,16 +98,8 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
         "--tooltip-opacity": tooltipOpacity,
         "--tooltip-duration": tooltipDuration,
         "--tooltip-cursor": tooltipCursor,
-        "--tooltip-left-position": `${
-          mousePosition.x -
-          (wrapperRef.current?.getBoundingClientRect()?.left ?? 0) -
-          20
-        }px`,
-        "--tooltip-top-position": `${
-          mousePosition.y -
-          (wrapperRef.current?.getBoundingClientRect()?.top ?? 0) -
-          80
-        }px`,
+        "--tooltip-left-position": `${tooltipLeft}px`,
+        "--tooltip-top-position": `${tooltipTop}px`,
       }}
     >
       {children}
