@@ -1,6 +1,9 @@
 {
   "name": "tooltip-experiment",
   "version": "0.1.0",
+  "contributors": [
+    "NicholasBingham"
+  ],
   "homepage": "https://EnshaednHiker.github.io/tooltip-experiment",
   "private": true,
   "dependencies": {
