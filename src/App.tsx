@@ -8,7 +8,7 @@ import { TooltipController } from "./components/TooltipController";
 
 function App() {
   return (
-    <div className="table-wrapper">
+    <div className="page-wrapper">
       <TooltipController>
         <table>
           <thead>

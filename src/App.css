@@ -13,10 +13,10 @@ th {
 table {
   border-collapse: collapse;
   max-width: 600px;
-  margin: 20px;
 }
 
-.table-wrapper {
+.page-wrapper {
   width: 100vw;
   height: 100vh;
+  display: flex;
 }
