@@ -5,9 +5,15 @@ export const TableRow = ({ index, category, headline }: TableRowProps) => {
 
   return (
     <tr>
-      <td data-tooltip={dataTooltip}>{index + 1}</td>
-      <td data-tooltip={dataTooltip}>{category}</td>
-      <td data-tooltip={dataTooltip}>{headline}</td>
+      <td data-tooltip={dataTooltip} data-row={index}>
+        {index + 1}
+      </td>
+      <td data-tooltip={dataTooltip} data-row={index}>
+        {category}
+      </td>
+      <td data-tooltip={dataTooltip} data-row={index}>
+        {headline}
+      </td>
     </tr>
   );
 };

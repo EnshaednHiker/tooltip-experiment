@@ -1,20 +1,38 @@
+@keyframes tooltip-pop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tooltip-pop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 .tooltip {
   position: relative;
   cursor: var(--tooltip-cursor);
   width: fit-content;
-  margin: auto 40px;
+  margin: auto 0;
 }
 
-.tooltip::before,
-.tooltip::after {
+.tooltip-bottom,
+.tooltip-top {
   position: absolute;
   left: var(--tooltip-left-position);
   top: var(--tooltip-top-position);
   opacity: var(--tooltip-opacity);
-  transition: all ease var(--tooltip-duration);
+  will-change: top, left, opacity;
 }
 
-.tooltip::before {
+.tooltip-bottom {
   content: "";
   border-width: 10px 8px 0 8px;
   border-style: solid;
@@ -22,8 +40,7 @@
   margin-left: -8px;
 }
 
-.tooltip::after {
-  content: attr(data-tooltip);
+.tooltip-top {
   background: rgba(0, 0, 0, 0.9);
   transform: translateY(-100%);
   font-size: 14px;
@@ -32,4 +49,8 @@
   border-radius: 10px;
   color: #eee;
   padding: 14px;
+}
+
+.table-wrapper {
+  margin: 40px auto;
 }
