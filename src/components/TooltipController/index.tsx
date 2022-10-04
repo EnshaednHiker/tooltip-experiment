@@ -1,4 +1,5 @@
 import {
+  KeyboardEvent,
   MouseEventHandler,
   PropsWithChildren,
   useCallback,
@@ -23,16 +24,6 @@ const INITIAL_ROW_VALUE = "initial";
 type Keyframes = typeof KEYFRAME_POP_IN | typeof KEYFRAME_POP_OUT;
 type Duration = typeof DURATION_LEAVE | typeof DURATION;
 
-const cancelAnimation = function (requestId: number | undefined) {
-  if (requestId) {
-    window.cancelAnimationFrame(requestId);
-    // animation frames increment numerically, and sometimes the last animation frame can get stuck when moving the mouse quickly
-    // removing the 2nd to last frame seems to be a better experience
-    window.cancelAnimationFrame(requestId - 1);
-  }
-  return requestId;
-};
-
 export const TooltipController = ({ children }: PropsWithChildren<any>) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const topTooltipRef = useRef<HTMLDivElement>(null);
@@ -53,10 +44,6 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
   const [animationState, setAnimationState] = useState<
     "reset" | "restart" | "restart-leave"
   >("reset");
-
-  const [animationRequestId, setAnimationRequestId] = useState<
-    number | undefined
-  >();
 
   const handleOnMouseLeave = useCallback<MouseEventHandler<HTMLDivElement>>(
     (event) => {
@@ -131,33 +118,31 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
         setTooltipOpacity(OPACITY_VISIBLE);
       }
 
-      // cancel any currently running animations before starting a new one.
-      // might not be strictly necessary since we're always resetting opacity to the the starting state of both animations
-      cancelAnimation(animationRequestId);
+      const animationDirection =
+        animationKeyFrame === KEYFRAME_POP_IN ? "forwards" : "forwards";
 
       const topTooltipElement = topTooltipRef.current as HTMLElement;
       const bottomTooltipElement = bottomTooltipRef.current as HTMLElement;
 
-      // by setting the animation style to none, we strip out the existing animation,
-      // this allows a new animation to placed on the elements and makes it so any animation
-      // can be reset over and over again without removing elements from the DOM or removing and placing classNames
-      topTooltipElement.style.animation = "none";
-      bottomTooltipElement.style.animation = "none";
-
       if (topTooltipElement && bottomTooltipElement) {
-        const requestId = window.requestAnimationFrame(function () {
-          topTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} both`;
-          topTooltipElement.style.animationDelay = "100ms";
+        // by setting the animation style to none, we strip out the existing animation,
+        // this allows a new animation to placed on the elements and makes it so any animation
+        // can be reset over and over again without removing elements from the DOM or removing and placing classNames
+        topTooltipElement.style.animation = "none";
+        bottomTooltipElement.style.animation = "none";
 
-          bottomTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} both`;
-          bottomTooltipElement.style.animationDelay = "100ms";
-        });
+        // why we do this: https://css-tricks.com/restart-css-animation/
+        void topTooltipElement.offsetWidth;
+        void bottomTooltipElement.offsetWidth;
 
-        return requestId;
+        topTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} ${animationDirection}`;
+        topTooltipElement.style.animationDelay = "1s";
+
+        bottomTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} ${animationDirection}`;
+        bottomTooltipElement.style.animationDelay = "1s";
       }
-      return undefined;
     },
-    [animationRequestId]
+    []
   );
 
   useEffect(() => {
@@ -166,21 +151,32 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
       // and to allow this useEffect to be tripped by state changes going from reset => restart-leave or reset => restart.
       // because this state resets things, we don't actually need to do anything here
     } else if (animationState === "restart") {
-      const currentAnimationRequestId = handleRequestAnimation(
-        KEYFRAME_POP_IN,
-        DURATION
-      );
-      setAnimationRequestId(currentAnimationRequestId);
+      handleRequestAnimation(KEYFRAME_POP_IN, DURATION);
+
       setAnimationState("reset");
     } else if ("restart-leave") {
-      const currentAnimationRequestId = handleRequestAnimation(
-        KEYFRAME_POP_OUT,
-        DURATION_LEAVE
-      );
-      setAnimationRequestId(currentAnimationRequestId);
+      setTooltipOpacity(OPACITY_VISIBLE);
+      handleRequestAnimation(KEYFRAME_POP_OUT, DURATION_LEAVE);
+
       setAnimationState("reset");
     }
   }, [animationState, handleRequestAnimation]);
+
+  const handleKeypressEventListener = useCallback((event: KeyboardEvent) => {
+    console.log("event.key", event.key);
+    console.log("event", event);
+
+    // if(event.key ===) {
+
+    // }
+  }, []);
+
+  useEffect(() => {
+    // @ts-ignore
+    window.addEventListener("keypress", handleKeypressEventListener);
+    // @ts-ignore
+    return window.removeEventListener("keypress", handleKeypressEventListener);
+  }, [handleKeypressEventListener]);
 
   return (
     <div className="table-wrapper">
@@ -201,8 +197,7 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
         <div
           className="tooltip-top"
           // if the tooltip exposes new information, we'd want to announce that information to screen reader users
-          role="alert"
-          tabIndex={-1}
+          role="tooltip"
           aria-hidden={true}
           ref={topTooltipRef}
         >
@@ -210,7 +205,6 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
         </div>
         <div
           className="tooltip-bottom"
-          tabIndex={-1}
           aria-hidden={true}
           ref={bottomTooltipRef}
         />
@@ -221,3 +215,31 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
 };
 
 TooltipController.displayName = "TooltipController";
+
+// TODO: I think we might need to have one tooltip component per row, then each component might be responsible for it's own animations. Might be better?
+// this could work by setting up an HOC that wraps each row. The TooltipController component will still manage state but then that state will get pumped via
+// context to the the HOC which contains the actual tooltip divs. That would mean that the tool tips would each be responsible for their own animations, and
+// each tooltip will fully animate regardless of where the mouse cursor currently is. Actually, maybe we only have to forward the refs via context?
+// But then again, maybe some logic will get broken out to the HOC? I'm so tired.
+
+// TODO: look into onMouseEnter and onMouseOut to count down to one second before kicking off an animation. Would put this in the Row component and wire that up to context
+
+// var time = 0;
+// var hover = 0;
+// var out = 0;
+
+// function getInTime() {
+//   hover = Date.now();
+// }
+
+// function getOutTime() {
+//   out = Date.now();
+//   time = out-hover;
+//   document.getElementById('time').innerHTML = " Show hover time: " + time + 'ms';
+// }
+
+{
+  /* <button onmouseout="getOutTime()" onmouseenter="getInTime()" >Hover Here</button>
+<br /><br />
+<button id="time">Hover Time</button> */
+}
