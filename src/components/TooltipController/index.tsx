@@ -8,11 +8,14 @@ import {
   useState,
 } from "react";
 
+import { useEventListener } from "../../utilities/use-event-listener";
+
 import "./styles.css";
 
 const TOOLTIP_CLASSNAME = "tooltip";
 const DURATION_LEAVE = "3s";
 const DURATION = "1s";
+const DURATION_NONE = "0s";
 const OPACITY_VISIBLE = "1";
 const OPACITY_INVISIBLE = "0";
 const CURSOR_HELP = "help";
@@ -22,7 +25,7 @@ const KEYFRAME_POP_OUT = "tooltip-pop-out";
 const INITIAL_ROW_VALUE = "initial";
 
 type Keyframes = typeof KEYFRAME_POP_IN | typeof KEYFRAME_POP_OUT;
-type Duration = typeof DURATION_LEAVE | typeof DURATION;
+type Duration = typeof DURATION_LEAVE | typeof DURATION | typeof DURATION_NONE;
 
 export const TooltipController = ({ children }: PropsWithChildren<any>) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -136,10 +139,10 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
         void bottomTooltipElement.offsetWidth;
 
         topTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} ${animationDirection}`;
-        topTooltipElement.style.animationDelay = "1s";
+        // topTooltipElement.style.animationDelay = "1s";
 
         bottomTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} ${animationDirection}`;
-        bottomTooltipElement.style.animationDelay = "1s";
+        // bottomTooltipElement.style.animationDelay = "1s";
       }
     },
     []
@@ -162,21 +165,18 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
     }
   }, [animationState, handleRequestAnimation]);
 
-  const handleKeypressEventListener = useCallback((event: KeyboardEvent) => {
-    console.log("event.key", event.key);
-    console.log("event", event);
+  const handleKeydownEventListener = useCallback(function (event: Event) {
+    const keyboardEvent = event as unknown as KeyboardEvent;
+    console.log("event.code", keyboardEvent.code);
+    console.log("event", keyboardEvent);
 
-    // if(event.key ===) {
-
-    // }
+    if (keyboardEvent.code === "Escape") {
+      handleRequestAnimation(KEYFRAME_POP_OUT, DURATION_NONE);
+    }
+    return undefined as any;
   }, []);
 
-  useEffect(() => {
-    // @ts-ignore
-    window.addEventListener("keypress", handleKeypressEventListener);
-    // @ts-ignore
-    return window.removeEventListener("keypress", handleKeypressEventListener);
-  }, [handleKeypressEventListener]);
+  useEventListener("keydown", handleKeydownEventListener);
 
   return (
     <div className="table-wrapper">
@@ -238,8 +238,6 @@ TooltipController.displayName = "TooltipController";
 //   document.getElementById('time').innerHTML = " Show hover time: " + time + 'ms';
 // }
 
-{
-  /* <button onmouseout="getOutTime()" onmouseenter="getInTime()" >Hover Here</button>
+/* <button onmouseout="getOutTime()" onmouseenter="getInTime()" >Hover Here</button>
 <br /><br />
 <button id="time">Hover Time</button> */
-}
