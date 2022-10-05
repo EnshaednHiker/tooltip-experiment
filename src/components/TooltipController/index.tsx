@@ -165,16 +165,17 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
     }
   }, [animationState, handleRequestAnimation]);
 
-  const handleKeydownEventListener = useCallback(function (event: Event) {
-    const keyboardEvent = event as unknown as KeyboardEvent;
-    console.log("event.code", keyboardEvent.code);
-    console.log("event", keyboardEvent);
+  const handleKeydownEventListener = useCallback(
+    function (event: Event) {
+      const keyboardEvent = event as unknown as KeyboardEvent;
 
-    if (keyboardEvent.code === "Escape") {
-      handleRequestAnimation(KEYFRAME_POP_OUT, DURATION_NONE);
-    }
-    return undefined as any;
-  }, []);
+      if (keyboardEvent.code === "Escape") {
+        handleRequestAnimation(KEYFRAME_POP_OUT, DURATION_NONE);
+      }
+      return undefined as any;
+    },
+    [handleRequestAnimation]
+  );
 
   useEventListener("keydown", handleKeydownEventListener);
 
