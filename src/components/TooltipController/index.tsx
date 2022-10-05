@@ -24,8 +24,16 @@ const KEYFRAME_POP_IN = "tooltip-pop-in";
 const KEYFRAME_POP_OUT = "tooltip-pop-out";
 const INITIAL_ROW_VALUE = "initial";
 
+const ANIMATION_RESET = "reset";
+const ANIMATION_RESTART = "restart";
+const ANIMATION_RESTART_LEAVE = "restart-leave";
+
 type Keyframes = typeof KEYFRAME_POP_IN | typeof KEYFRAME_POP_OUT;
 type Duration = typeof DURATION_LEAVE | typeof DURATION | typeof DURATION_NONE;
+type AnimationStates =
+  | typeof ANIMATION_RESET
+  | typeof ANIMATION_RESTART
+  | typeof ANIMATION_RESTART_LEAVE;
 
 export const TooltipController = ({ children }: PropsWithChildren<any>) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -44,16 +52,15 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
   const [row, setRow] = useState<string>(INITIAL_ROW_VALUE);
   const [cursorIsInTableHeadRow, setIsCursorInTableHeadRow] =
     useState<boolean>(true);
-  const [animationState, setAnimationState] = useState<
-    "reset" | "restart" | "restart-leave"
-  >("reset");
+  const [animationState, setAnimationState] =
+    useState<AnimationStates>(ANIMATION_RESET);
 
   const handleOnMouseLeave = useCallback<MouseEventHandler<HTMLDivElement>>(
     (event) => {
       setTooltipCursor(CURSOR_AUTO);
       setRow(INITIAL_ROW_VALUE);
       if (!cursorIsInTableHeadRow) {
-        setAnimationState("restart-leave");
+        setAnimationState(ANIMATION_RESTART_LEAVE);
       }
     },
     [cursorIsInTableHeadRow]
@@ -76,7 +83,7 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
       }
 
       if (currentRow !== row && isInTableCell && tooltipData) {
-        setAnimationState("restart");
+        setAnimationState(ANIMATION_RESTART);
         setTooltipCursor(CURSOR_HELP);
         setIsCursorInTableHeadRow(false);
       }
@@ -89,7 +96,7 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
         currentRow !== row &&
         !tooltipData
       ) {
-        setAnimationState("restart-leave");
+        setAnimationState(ANIMATION_RESTART_LEAVE);
         setTooltipCursor(CURSOR_AUTO);
         setIsCursorInTableHeadRow(true);
       }
@@ -121,9 +128,6 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
         setTooltipOpacity(OPACITY_VISIBLE);
       }
 
-      const animationDirection =
-        animationKeyFrame === KEYFRAME_POP_IN ? "forwards" : "forwards";
-
       const topTooltipElement = topTooltipRef.current as HTMLElement;
       const bottomTooltipElement = bottomTooltipRef.current as HTMLElement;
 
@@ -138,10 +142,10 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
         void topTooltipElement.offsetWidth;
         void bottomTooltipElement.offsetWidth;
 
-        topTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} ${animationDirection}`;
+        topTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} forwards`;
         // topTooltipElement.style.animationDelay = "1s";
 
-        bottomTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} ${animationDirection}`;
+        bottomTooltipElement.style.animation = `${animationKeyFrame} ${animationDuration} forwards`;
         // bottomTooltipElement.style.animationDelay = "1s";
       }
     },
@@ -149,19 +153,19 @@ export const TooltipController = ({ children }: PropsWithChildren<any>) => {
   );
 
   useEffect(() => {
-    if (animationState === "reset") {
+    if (animationState === ANIMATION_RESET) {
       // reset exists to allow animationState a state to return to after tripping a new animation
       // and to allow this useEffect to be tripped by state changes going from reset => restart-leave or reset => restart.
       // because this state resets things, we don't actually need to do anything here
-    } else if (animationState === "restart") {
+    } else if (animationState === ANIMATION_RESTART) {
       handleRequestAnimation(KEYFRAME_POP_IN, DURATION);
 
-      setAnimationState("reset");
-    } else if ("restart-leave") {
+      setAnimationState(ANIMATION_RESET);
+    } else if (ANIMATION_RESTART_LEAVE) {
       setTooltipOpacity(OPACITY_VISIBLE);
       handleRequestAnimation(KEYFRAME_POP_OUT, DURATION_LEAVE);
 
-      setAnimationState("reset");
+      setAnimationState(ANIMATION_RESET);
     }
   }, [animationState, handleRequestAnimation]);
 
